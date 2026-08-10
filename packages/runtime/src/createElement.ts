@@ -19,6 +19,12 @@ import type {
   JawComponent,
 } from '@jaw/core';
 import { createNode, isJawNode } from '@jaw/core';
+import {
+  getOrCreateContext,
+  setCurrentContext,
+  getCurrentContextOrNull,
+  getNextComponentId,
+} from './state';
 
 /** Built-in node types that map to intrinsic elements */
 const INTRINSIC_TYPES = new Set<string>([
@@ -103,7 +109,16 @@ export function createElement(
   if (typeof type === 'function') {
     const component = type as JawComponent;
     resolvedProps.children = normalizedChildren;
-    return component(resolvedProps);
+    
+    const id = getNextComponentId(component.name || 'AnonymousComponent', key);
+    const prevContext = getCurrentContextOrNull();
+    const ctx = getOrCreateContext(id);
+    
+    setCurrentContext(ctx);
+    const node = component(resolvedProps);
+    setCurrentContext(prevContext);
+    
+    return node;
   }
 
   // Otherwise it's an intrinsic element type

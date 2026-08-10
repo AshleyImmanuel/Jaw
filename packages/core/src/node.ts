@@ -105,7 +105,7 @@ export type JawComponent<P extends JawProps = JawProps> = (props: P) => JawNode;
  * What createElement accepts as the first argument:
  * either a built-in type string or a component function.
  */
-export type JawElementType = JawNodeType | string | JawComponent;
+export type JawElementType = JawNodeType | string | JawComponent<any>;
 
 /** Type guard: check if a value is a JawNode */
 export function isJawNode(value: unknown): value is JawNode {

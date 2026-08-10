@@ -24,6 +24,7 @@ export {
   getCurrentContext,
   destroyContext,
   __resetAllState,
+  __resetComponentCounters,
 } from './state';
 
 // --- Lifecycle ---
@@ -46,6 +47,7 @@ export {
 
 // --- Jaw namespace (for JSX factory) ---
 import { createElement, Fragment } from './createElement';
+import { createState } from './state';
 
 /**
  * The Jaw namespace.
@@ -55,6 +57,7 @@ import { createElement, Fragment } from './createElement';
 const Jaw = {
   createElement,
   Fragment,
+  createState,
 };
 
 export default Jaw;

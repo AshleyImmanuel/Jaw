@@ -63,6 +63,20 @@ const contextRegistry = new Map<string, ComponentContext>();
 /** Auto-incrementing ID counter for component instances */
 let nextContextId = 0;
 
+/** Counters for component renders during a single pass to generate stable IDs */
+const componentCounters = new Map<string, number>();
+
+export function __resetComponentCounters(): void {
+  componentCounters.clear();
+}
+
+export function getNextComponentId(name: string, key?: string | number): string {
+  const baseId = key !== undefined ? `${name}_${key}` : name;
+  const count = componentCounters.get(baseId) ?? 0;
+  componentCounters.set(baseId, count + 1);
+  return `${baseId}_${count}`;
+}
+
 /**
  * Create a new component context.
  * Called by the runtime before rendering a component.
@@ -132,6 +146,14 @@ export function getCurrentContext(): ComponentContext {
 }
 
 /**
+ * Get the current component context or null.
+ * Used internally by the runtime.
+ */
+export function getCurrentContextOrNull(): ComponentContext | null {
+  return currentContext;
+}
+
+/**
  * Destroy a component context and run unmount callbacks.
  */
 export function destroyContext(id: string): void {
@@ -190,6 +212,9 @@ export function createState<T>(initial: T): [() => T, (next: T | ((prev: T) => T
           // Schedule re-render
           if (context.rerender) {
             scheduleUpdate(context.rerender);
+          } else {
+            // Fallback to a global render if no specific rerender is bound
+            scheduleUpdate(() => {});
           }
         }
       },

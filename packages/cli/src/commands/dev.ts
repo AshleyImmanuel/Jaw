@@ -40,6 +40,9 @@ export async function startDevServer(options: DevOptions = {}): Promise<void> {
 
   console.log('[Jaw] Starting development server...');
 
+  // Livereload clients
+  const clients = new Set<http.ServerResponse>();
+
   // Initial build with esbuild
   const buildOptions = getJawBuildOptions({
     entryPoints: [entryPath],
@@ -50,6 +53,16 @@ export async function startDevServer(options: DevOptions = {}): Promise<void> {
     define: {
       'process.env.NODE_ENV': '"development"',
     },
+    plugins: [{
+      name: 'jaw-livereload',
+      setup(build) {
+        build.onEnd(() => {
+          for (const client of clients) {
+            client.write('data: update\n\n');
+          }
+        });
+      }
+    }]
   });
 
   // Create esbuild context for rebuilds
@@ -65,10 +78,31 @@ export async function startDevServer(options: DevOptions = {}): Promise<void> {
 
   // Simple HTTP server
   const server = http.createServer((req, res) => {
+    // Handle livereload SSE connections
+    if (req.url === '/livereload') {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+      });
+      clients.add(res);
+      req.on('close', () => clients.delete(res));
+      return;
+    }
+
     let filePath: string;
 
     if (req.url === '/' || req.url === '/index.html') {
       filePath = path.join(cwd, 'index.html');
+      if (fs.existsSync(filePath)) {
+        let content = fs.readFileSync(filePath, 'utf-8');
+        // Inject livereload script
+        content = content.replace('</body>', `<script>new EventSource('/livereload').onmessage=()=>location.reload()</script></body>`);
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(content);
+        return;
+      }
     } else {
       filePath = path.join(cwd, req.url ?? '');
     }

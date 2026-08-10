@@ -23,10 +23,11 @@ const ZERO_EDGES = { top: 0, right: 0, bottom: 0, left: 0 };
  * @param rootNode - The root JawNode to lay out
  * @param containerWidth - Available width from the container
  * @param containerHeight - Available height from the container
+ * @param measureText - Optional function to measure text nodes intrinsically
  * @returns A LayoutBox tree with computed geometry
  */
-export function computeLayout(rootNode, containerWidth, containerHeight) {
-    return layoutNode(rootNode, containerWidth, containerHeight);
+export function computeLayout(rootNode, containerWidth, containerHeight, measureText) {
+    return layoutNode(rootNode, containerWidth, containerHeight, measureText);
 }
 /**
  * Layout a single node within the given available space.
@@ -38,7 +39,7 @@ export function computeLayout(rootNode, containerWidth, containerHeight) {
  * 4. Layout children (recursive)
  * 5. Position children based on flex direction, alignment, etc.
  */
-function layoutNode(node, availableWidth, availableHeight) {
+function layoutNode(node, availableWidth, availableHeight, measureText) {
     // Resolve styles: component defaults + user styles
     const defaultStyle = getDefaultStyles(node.type);
     const style = mergeStyles(defaultStyle, node.props.style);
@@ -63,6 +64,27 @@ function layoutNode(node, availableWidth, availableHeight) {
     // Content area is own size minus box model spacing
     const contentWidth = Math.max(0, ownWidth - hBoxSpace);
     const contentHeight = Math.max(0, ownHeight - vBoxSpace);
+    // Handle intrinsic measurement for Text nodes
+    if (node.type === 'Text' && measureText) {
+        const content = typeof node.props.content === 'string' ? node.props.content : '';
+        const measuredSize = measureText({
+            content,
+            fontSize: style.fontSize,
+            fontWeight: style.fontWeight,
+            fontFamily: style.fontFamily,
+            lineHeight: style.lineHeight,
+            letterSpacing: style.letterSpacing,
+            availableWidth: availableWidth - hBoxSpace,
+        });
+        // Override width and height with measured size if they weren't explicitly set
+        if (style.width === undefined)
+            ownWidth = measuredSize.width + hBoxSpace;
+        if (style.height === undefined)
+            ownHeight = measuredSize.height + vBoxSpace;
+        // Re-apply constraints just in case
+        ownWidth = clampWidth(ownWidth, style);
+        ownHeight = clampHeight(ownHeight, style);
+    }
     // Handle leaf nodes (Text, Image, Spacer)
     if (isLeafNode(node)) {
         return createLayoutBox(node, ownWidth - boxModel.margin.left - boxModel.margin.right, ownHeight - boxModel.margin.top - boxModel.margin.bottom, boxModel, []);
@@ -130,7 +152,7 @@ function layoutNode(node, availableWidth, availableHeight) {
         // Pass the parent's content dimensions so that percentage-based
         // widths/heights in children resolve against the parent's content area,
         // not against the already-computed flex size.
-        const childLayout = layoutNode(childNodes[i], contentWidth, contentHeight);
+        const childLayout = layoutNode(childNodes[i], contentWidth, contentHeight, measureText);
         // Override with flex-computed dimensions
         childLayout.width = Math.max(0, childWidth - childLayout.margin.left - childLayout.margin.right);
         childLayout.height = Math.max(0, childHeight - childLayout.margin.top - childLayout.margin.bottom);

@@ -1,0 +1,19 @@
+{
+  "name": "@jaw/renderer-android",
+  "version": "0.1.0",
+  "description": "Jaw native Android renderer package",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@jaw/core": "*",
+    "@jaw/layout": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.0"
+  }
+}

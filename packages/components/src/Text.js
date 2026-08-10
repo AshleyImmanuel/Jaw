@@ -16,10 +16,10 @@ import { createNode } from '@jaw/core';
  */
 export function Text(props) {
     const { children, content, ...restProps } = props;
-    // Resolve content: explicit content prop takes priority, then children
     const textContent = content ?? (typeof children === 'string' ? children :
         typeof children === 'number' ? String(children) :
-            '');
+            (Array.isArray(children) && children.length > 0 && children[0].type === 'Text') ? String(children[0].props.content || '') :
+                '');
     return createNode('Text', { ...restProps, content: textContent }, [], // Text is a leaf node -- no children
     props.key);
 }

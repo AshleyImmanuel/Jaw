@@ -14,7 +14,7 @@
 // --- JSX Factory ---
 export { createElement, Fragment } from './createElement';
 // --- State Management ---
-export { createState, createComponentContext, getOrCreateContext, setCurrentContext, getCurrentContext, destroyContext, __resetAllState, } from './state';
+export { createState, createComponentContext, getOrCreateContext, setCurrentContext, getCurrentContext, destroyContext, __resetAllState, __resetComponentCounters, } from './state';
 // --- Lifecycle ---
 export { onMount, onUnmount, flushMountCallbacks } from './lifecycle';
 // --- Effects ---
@@ -25,6 +25,7 @@ export { dispatchEvent, dispatchEventWithBubbling } from './events';
 export { scheduleUpdate, setRenderCallback, hasPendingUpdates, __flushSync, __resetScheduler, } from './scheduler';
 // --- Jaw namespace (for JSX factory) ---
 import { createElement, Fragment } from './createElement';
+import { createState } from './state';
 /**
  * The Jaw namespace.
  * TypeScript JSX is configured to call Jaw.createElement.
@@ -33,6 +34,7 @@ import { createElement, Fragment } from './createElement';
 const Jaw = {
     createElement,
     Fragment,
+    createState,
 };
 export default Jaw;
 //# sourceMappingURL=index.js.map

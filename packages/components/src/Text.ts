@@ -13,7 +13,7 @@ export interface TextProps extends JawProps {
   style?: JawStyle;
   /** The text content to display. Can also be passed as children. */
   content?: string;
-  children?: string | number;
+  children?: string | number | ReadonlyArray<JawNode>;
 }
 
 /**
@@ -27,10 +27,10 @@ export interface TextProps extends JawProps {
 export function Text(props: TextProps): JawNode {
   const { children, content, ...restProps } = props;
 
-  // Resolve content: explicit content prop takes priority, then children
   const textContent = content ?? (
     typeof children === 'string' ? children :
     typeof children === 'number' ? String(children) :
+    (Array.isArray(children) && children.length > 0 && children[0].type === 'Text') ? String(children[0].props.content || '') :
     ''
   );
 

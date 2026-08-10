@@ -25,8 +25,14 @@ import { createNode } from '@jaw/core';
 export function Scroll(props) {
     const { children = [], scrollDirection = 'vertical', style, ...restProps } = props;
     const normalizedChildren = Array.isArray(children) ? children : [];
+    // Determine flex direction based on scroll direction if not explicitly set
+    let defaultFlexDirection = 'column';
+    if (scrollDirection === 'horizontal') {
+        defaultFlexDirection = 'row';
+    }
     // Apply overflow based on scroll direction
     const scrollStyle = {
+        flexDirection: defaultFlexDirection,
         ...style,
         overflow: scrollDirection === 'both' ? 'scroll' : undefined,
         overflowX: scrollDirection === 'horizontal' || scrollDirection === 'both' ? 'scroll' : 'hidden',

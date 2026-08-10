@@ -25,13 +25,11 @@ export declare function createDOMTree(layoutBox: LayoutBox): HTMLElement;
  */
 export declare function mountDOM(tree: LayoutBox, container: HTMLElement): void;
 /**
- * Update the DOM by re-rendering the entire tree.
+ * Update the DOM by diffing the old and new trees.
  *
- * For Beta 1, this is a full re-render (replace entire DOM tree).
- * The diff/patch system in diff.ts provides the optimization path.
- *
+ * @param oldTree - The previous LayoutBox tree
  * @param newTree - The new LayoutBox tree
  * @param container - The DOM container
  */
-export declare function updateDOM(newTree: LayoutBox, container: HTMLElement): void;
+export declare function updateDOM(oldTree: LayoutBox | null, newTree: LayoutBox, container: HTMLElement): void;
 //# sourceMappingURL=dom.d.ts.map

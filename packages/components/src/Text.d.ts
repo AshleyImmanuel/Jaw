@@ -10,7 +10,7 @@ export interface TextProps extends JawProps {
     style?: JawStyle;
     /** The text content to display. Can also be passed as children. */
     content?: string;
-    children?: string | number;
+    children?: string | number | ReadonlyArray<JawNode>;
 }
 /**
  * Text -- displays text content.

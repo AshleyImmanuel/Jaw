@@ -5,7 +5,20 @@
  * Similar to React's useEffect but with explicit dependency tracking.
  */
 
-import { getCurrentContext } from './state';
+import { getCurrentContext, setCurrentEffectSubscriber } from './state';
+
+function runEffectWithTracking(slot: any, callback: () => void | (() => void)) {
+  setCurrentEffectSubscriber(slot);
+  let cleanup;
+  try {
+    cleanup = callback();
+  } catch (err) {
+    console.error('[Jaw] Error in createEffect:', err);
+  } finally {
+    setCurrentEffectSubscriber(null);
+  }
+  return cleanup;
+}
 
 /**
  * Run a side effect when dependencies change.
@@ -32,20 +45,17 @@ export function createEffect(
 
   // First render: create effect slot
   if (index >= context.effects.length) {
-    context.effects.push({
+    const slot = {
       deps,
-      cleanup: undefined,
+      cleanup: undefined as (() => void) | void,
       callback,
-    });
+    };
+    context.effects.push(slot);
     // Run the effect after render (via microtask)
     queueMicrotask(() => {
-      try {
-        const cleanup = callback();
-        if (context.effects[index]) {
-          context.effects[index].cleanup = cleanup;
-        }
-      } catch (err) {
-        console.error('[Jaw] Error in createEffect:', err);
+      const cleanup = runEffectWithTracking(slot, callback);
+      if (context.effects[index]) {
+        context.effects[index].cleanup = cleanup;
       }
     });
     return;
@@ -70,12 +80,7 @@ export function createEffect(
 
     // Run new effect after render
     queueMicrotask(() => {
-      try {
-        const cleanup = callback();
-        slot.cleanup = cleanup;
-      } catch (err) {
-        console.error('[Jaw] Error in createEffect:', err);
-      }
+      slot.cleanup = runEffectWithTracking(slot, callback);
     });
   }
 }

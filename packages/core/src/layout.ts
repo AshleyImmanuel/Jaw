@@ -65,3 +65,22 @@ export interface LayoutConstraints {
   heightMode: 'exact' | 'atMost' | 'unconstrained';
 }
 
+/**
+ * Context provided to a MeasureFunction to compute intrinsic size.
+ */
+export interface TextMeasureContext {
+  content: string;
+  fontSize?: number | string;
+  fontWeight?: string | number;
+  fontFamily?: string;
+  lineHeight?: number | string;
+  letterSpacing?: number;
+  availableWidth: number;
+}
+
+/**
+ * A function that computes the intrinsic width and height of a node.
+ * For example, measuring text given font styles and available width.
+ */
+export type MeasureFunction = (ctx: TextMeasureContext) => { width: number; height: number };
+

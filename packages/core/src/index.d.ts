@@ -8,7 +8,7 @@
 export type { JawNode, JawTextNode, JawProps, JawComponent, JawElementType, JawNodeType, } from './node';
 export { isJawNode, isTextNode, createNode, } from './node';
 export type { JawStyle, AlignItems, JustifyContent, FlexDirection, Overflow, Position, TextAlign, FontWeight, SpacingEdges, BorderStyle, ResolvedEdges, } from './style';
-export type { LayoutBox, LayoutRect, LayoutConstraints, } from './layout';
+export type { LayoutBox, LayoutRect, LayoutConstraints, TextMeasureContext, MeasureFunction, } from './layout';
 export type { JawEvent, JawEventHandler, JawEventType, } from './events';
 export { createJawEvent, EVENT_HANDLER_MAP, } from './events';
 export type { Renderer, RendererEventCallback, RendererConfig, } from './renderer';

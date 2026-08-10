@@ -42,6 +42,8 @@ export type {
   LayoutBox,
   LayoutRect,
   LayoutConstraints,
+  TextMeasureContext,
+  MeasureFunction,
 } from './layout';
 
 // --- Event types ---

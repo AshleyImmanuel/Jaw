@@ -7,7 +7,7 @@
  * This is a flexbox-inspired, deterministic layout engine.
  * It is platform-independent -- no DOM or native APIs.
  */
-import type { JawNode, LayoutBox } from '@jaw/core';
+import type { JawNode, LayoutBox, MeasureFunction } from '@jaw/core';
 /**
  * Compute layout for a JawNode tree.
  *
@@ -18,7 +18,8 @@ import type { JawNode, LayoutBox } from '@jaw/core';
  * @param rootNode - The root JawNode to lay out
  * @param containerWidth - Available width from the container
  * @param containerHeight - Available height from the container
+ * @param measureText - Optional function to measure text nodes intrinsically
  * @returns A LayoutBox tree with computed geometry
  */
-export declare function computeLayout(rootNode: JawNode, containerWidth: number, containerHeight: number): LayoutBox;
+export declare function computeLayout(rootNode: JawNode, containerWidth: number, containerHeight: number, measureText?: MeasureFunction): LayoutBox;
 //# sourceMappingURL=engine.d.ts.map

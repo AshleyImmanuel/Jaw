@@ -17,6 +17,7 @@ import { scheduleUpdate } from './scheduler';
 interface StateSlot<T = unknown> {
   value: T;
   setter: (next: T | ((prev: T) => T)) => void;
+  subscribers: Set<ComponentContext | EffectSlot>;
 }
 
 /**
@@ -56,6 +57,13 @@ interface EffectSlot {
 
 /** The currently active component context */
 let currentContext: ComponentContext | null = null;
+
+/** The currently active effect slot (for fine-grained reactivity) */
+export let currentEffectSubscriber: EffectSlot | null = null;
+
+export function setCurrentEffectSubscriber(effect: EffectSlot | null): void {
+  currentEffectSubscriber = effect;
+}
 
 /** Global context registry keyed by component instance ID */
 const contextRegistry = new Map<string, ComponentContext>();
@@ -200,6 +208,7 @@ export function createState<T>(initial: T): [() => T, (next: T | ((prev: T) => T
   if (index >= context.states.length) {
     const slot: StateSlot<T> = {
       value: initial,
+      subscribers: new Set(),
       setter: (next: T | ((prev: T) => T)) => {
         const currentValue = slot.value;
         const newValue = typeof next === 'function'
@@ -209,12 +218,27 @@ export function createState<T>(initial: T): [() => T, (next: T | ((prev: T) => T
         // Only update if value actually changed
         if (!Object.is(currentValue, newValue)) {
           slot.value = newValue;
-          // Schedule re-render
-          if (context.rerender) {
-            scheduleUpdate(context.rerender);
+          
+          // Trigger subscribers!
+          if (slot.subscribers.size > 0) {
+            for (const sub of slot.subscribers) {
+              if ('callback' in sub) {
+                // It's an EffectSlot
+                if (sub.cleanup) sub.cleanup();
+                const cleanup = sub.callback();
+                if (typeof cleanup === 'function') sub.cleanup = cleanup;
+              } else if ('rerender' in sub && sub.rerender) {
+                // It's a ComponentContext
+                scheduleUpdate(sub.rerender);
+              }
+            }
           } else {
-            // Fallback to a global render if no specific rerender is bound
-            scheduleUpdate(() => {});
+            // Fallback to a global render if no subscribers are bound yet
+            if (context.rerender) {
+              scheduleUpdate(context.rerender);
+            } else {
+              scheduleUpdate(() => {});
+            }
           }
         }
       },
@@ -223,7 +247,21 @@ export function createState<T>(initial: T): [() => T, (next: T | ((prev: T) => T
   }
 
   const slot = context.states[index] as StateSlot<T>;
-  return [() => slot.value, slot.setter];
+  
+  // The Getter
+  const getter = () => {
+    // 1. If an effect is currently running, subscribe it!
+    if (currentEffectSubscriber) {
+      slot.subscribers.add(currentEffectSubscriber);
+    } 
+    // 2. Otherwise, subscribe the current component rendering context
+    else if (currentContext) {
+      slot.subscribers.add(currentContext);
+    }
+    return slot.value;
+  };
+
+  return [getter, slot.setter];
 }
 
 /**

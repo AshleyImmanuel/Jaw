@@ -11,10 +11,26 @@
 import { scheduleUpdate } from './scheduler';
 /** The currently active component context */
 let currentContext = null;
+/** The currently active effect slot (for fine-grained reactivity) */
+export let currentEffectSubscriber = null;
+export function setCurrentEffectSubscriber(effect) {
+    currentEffectSubscriber = effect;
+}
 /** Global context registry keyed by component instance ID */
 const contextRegistry = new Map();
 /** Auto-incrementing ID counter for component instances */
 let nextContextId = 0;
+/** Counters for component renders during a single pass to generate stable IDs */
+const componentCounters = new Map();
+export function __resetComponentCounters() {
+    componentCounters.clear();
+}
+export function getNextComponentId(name, key) {
+    const baseId = key !== undefined ? `${name}_${key}` : name;
+    const count = componentCounters.get(baseId) ?? 0;
+    componentCounters.set(baseId, count + 1);
+    return `${baseId}_${count}`;
+}
 /**
  * Create a new component context.
  * Called by the runtime before rendering a component.
@@ -78,6 +94,13 @@ export function getCurrentContext() {
     return currentContext;
 }
 /**
+ * Get the current component context or null.
+ * Used internally by the runtime.
+ */
+export function getCurrentContextOrNull() {
+    return currentContext;
+}
+/**
  * Destroy a component context and run unmount callbacks.
  */
 export function destroyContext(id) {
@@ -124,6 +147,7 @@ export function createState(initial) {
     if (index >= context.states.length) {
         const slot = {
             value: initial,
+            subscribers: new Set(),
             setter: (next) => {
                 const currentValue = slot.value;
                 const newValue = typeof next === 'function'
@@ -132,9 +156,31 @@ export function createState(initial) {
                 // Only update if value actually changed
                 if (!Object.is(currentValue, newValue)) {
                     slot.value = newValue;
-                    // Schedule re-render
-                    if (context.rerender) {
-                        scheduleUpdate(context.rerender);
+                    // Trigger subscribers!
+                    if (slot.subscribers.size > 0) {
+                        for (const sub of slot.subscribers) {
+                            if ('callback' in sub) {
+                                // It's an EffectSlot
+                                if (sub.cleanup)
+                                    sub.cleanup();
+                                const cleanup = sub.callback();
+                                if (typeof cleanup === 'function')
+                                    sub.cleanup = cleanup;
+                            }
+                            else if ('rerender' in sub && sub.rerender) {
+                                // It's a ComponentContext
+                                scheduleUpdate(sub.rerender);
+                            }
+                        }
+                    }
+                    else {
+                        // Fallback to a global render if no subscribers are bound yet
+                        if (context.rerender) {
+                            scheduleUpdate(context.rerender);
+                        }
+                        else {
+                            scheduleUpdate(() => { });
+                        }
                     }
                 }
             },
@@ -142,7 +188,19 @@ export function createState(initial) {
         context.states.push(slot);
     }
     const slot = context.states[index];
-    return [() => slot.value, slot.setter];
+    // The Getter
+    const getter = () => {
+        // 1. If an effect is currently running, subscribe it!
+        if (currentEffectSubscriber) {
+            slot.subscribers.add(currentEffectSubscriber);
+        }
+        // 2. Otherwise, subscribe the current component rendering context
+        else if (currentContext) {
+            slot.subscribers.add(currentContext);
+        }
+        return slot.value;
+    };
+    return [getter, slot.setter];
 }
 /**
  * Reset all state -- used for testing.

@@ -14,6 +14,7 @@
 interface StateSlot<T = unknown> {
     value: T;
     setter: (next: T | ((prev: T) => T)) => void;
+    subscribers: Set<ComponentContext | EffectSlot>;
 }
 /**
  * Component context -- tracks state for the currently rendering component.
@@ -42,6 +43,11 @@ interface EffectSlot {
     cleanup: (() => void) | void;
     callback: () => void | (() => void);
 }
+/** The currently active effect slot (for fine-grained reactivity) */
+export declare let currentEffectSubscriber: EffectSlot | null;
+export declare function setCurrentEffectSubscriber(effect: EffectSlot | null): void;
+export declare function __resetComponentCounters(): void;
+export declare function getNextComponentId(name: string, key?: string | number): string;
 /**
  * Create a new component context.
  * Called by the runtime before rendering a component.
@@ -61,6 +67,11 @@ export declare function setCurrentContext(context: ComponentContext | null): voi
  * Throws if called outside a component render.
  */
 export declare function getCurrentContext(): ComponentContext;
+/**
+ * Get the current component context or null.
+ * Used internally by the runtime.
+ */
+export declare function getCurrentContextOrNull(): ComponentContext | null;
 /**
  * Destroy a component context and run unmount callbacks.
  */

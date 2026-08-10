@@ -63,7 +63,7 @@ const SKIP_PROPERTIES = new Set([
     'flex', 'flexGrow', 'flexShrink', 'flexBasis', 'alignSelf',
     'margin', 'padding',
     'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
-    'position', 'top', 'right', 'bottom', 'left',
+    'position',
 ]);
 /**
  * Convert a JawStyle value to a CSS value string.
@@ -86,12 +86,34 @@ function toCSSValue(prop, value) {
 export function layoutBoxToCSS(layoutBox) {
     const style = layoutBox.node.props.style ?? {};
     const parts = [];
-    // Layout-computed styles (from LayoutBox)
+    // Core layout
     parts.push(`display:flex`);
     parts.push(`box-sizing:border-box`);
     parts.push(`position:${style.position ?? 'relative'}`);
-    parts.push(`width:${layoutBox.width}px`);
-    parts.push(`height:${layoutBox.height}px`);
+    // Add smooth transitions for all properties to make the UI feel reactive and animated
+    parts.push(`transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1)`);
+    // Explicit dimensions (override Jaw computed sizes in Beta 1 to let browser layout engine handle it)
+    if (style.width !== undefined)
+        parts.push(`width:${toCSSValue('width', style.width)}`);
+    if (style.height !== undefined)
+        parts.push(`height:${toCSSValue('height', style.height)}`);
+    if (style.minWidth !== undefined)
+        parts.push(`min-width:${toCSSValue('minWidth', style.minWidth)}`);
+    if (style.maxWidth !== undefined)
+        parts.push(`max-width:${toCSSValue('maxWidth', style.maxWidth)}`);
+    if (style.minHeight !== undefined)
+        parts.push(`min-height:${toCSSValue('minHeight', style.minHeight)}`);
+    if (style.maxHeight !== undefined)
+        parts.push(`max-height:${toCSSValue('maxHeight', style.maxHeight)}`);
+    // Flex properties
+    if (style.flex !== undefined)
+        parts.push(`flex:${style.flex}`);
+    if (style.flexGrow !== undefined)
+        parts.push(`flex-grow:${style.flexGrow}`);
+    if (style.flexShrink !== undefined)
+        parts.push(`flex-shrink:${style.flexShrink}`);
+    if (style.flexBasis !== undefined)
+        parts.push(`flex-basis:${toCSSValue('flexBasis', style.flexBasis)}`);
     // Flex direction
     if (style.flexDirection) {
         parts.push(`flex-direction:${style.flexDirection}`);
@@ -112,6 +134,11 @@ export function layoutBoxToCSS(layoutBox) {
     // Gap
     if (style.gap !== undefined) {
         parts.push(`gap:${style.gap}px`);
+    }
+    // Margin (from layout box)
+    if (layoutBox.margin.top || layoutBox.margin.right ||
+        layoutBox.margin.bottom || layoutBox.margin.left) {
+        parts.push(`margin:${layoutBox.margin.top}px ${layoutBox.margin.right}px ${layoutBox.margin.bottom}px ${layoutBox.margin.left}px`);
     }
     // Padding (from layout box)
     if (layoutBox.padding.top || layoutBox.padding.right ||

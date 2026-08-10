@@ -11,6 +11,7 @@
  * Universal Component Tree.
  */
 import { createNode, isJawNode } from '@jaw/core';
+import { getOrCreateContext, setCurrentContext, getCurrentContextOrNull, getNextComponentId, } from './state';
 /** Built-in node types that map to intrinsic elements */
 const INTRINSIC_TYPES = new Set([
     'Box', 'Row', 'Column', 'Text', 'Button',
@@ -79,7 +80,13 @@ export function createElement(type, props, ...children) {
     if (typeof type === 'function') {
         const component = type;
         resolvedProps.children = normalizedChildren;
-        return component(resolvedProps);
+        const id = getNextComponentId(component.name || 'AnonymousComponent', key);
+        const prevContext = getCurrentContextOrNull();
+        const ctx = getOrCreateContext(id);
+        setCurrentContext(ctx);
+        const node = component(resolvedProps);
+        setCurrentContext(prevContext);
+        return node;
     }
     // Otherwise it's an intrinsic element type
     const nodeType = type;

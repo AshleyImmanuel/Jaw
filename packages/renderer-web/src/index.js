@@ -42,8 +42,7 @@ export class WebRenderer {
         if (!this.container)
             return;
         this.currentTree = newTree;
-        // Use full re-render for reliability in Beta 1
-        updateDOM(newTree, this.container);
+        updateDOM(oldTree, newTree, this.container);
     }
     /**
      * Unmount and clean up.
@@ -75,19 +74,50 @@ export class WebRenderer {
  * @returns A re-render function that can be called with a new tree
  */
 export function render(rootNode, container, width, height) {
-    const containerWidth = width ?? container.clientWidth;
-    const containerHeight = height ?? container.clientHeight;
-    // Compute layout
-    let currentLayout = computeLayout(rootNode, containerWidth, containerHeight);
-    // Mount to DOM
+    let currentRootNode = rootNode;
+    let currentLayout = null;
+    // Create a reusable off-screen canvas for fast, synchronous text measurement
+    const measurementCanvas = document.createElement('canvas');
+    const measurementContext = measurementCanvas.getContext('2d');
+    const measureText = (ctx) => {
+        if (!measurementContext)
+            return { width: 0, height: 0 };
+        // Construct font string (e.g. "bold 16px sans-serif")
+        const weight = ctx.fontWeight ?? 'normal';
+        const size = typeof ctx.fontSize === 'number' ? `${ctx.fontSize}px` : (ctx.fontSize ?? '16px');
+        const family = ctx.fontFamily ?? 'sans-serif';
+        measurementContext.font = `${weight} ${size} ${family}`;
+        // Measure text
+        const metrics = measurementContext.measureText(ctx.content);
+        // Approximate height if fontBoundingBoxAscent is not available in all browsers
+        const height = (metrics.fontBoundingBoxAscent || parseInt(size)) +
+            (metrics.fontBoundingBoxDescent || 0);
+        return {
+            width: metrics.width,
+            // Add a tiny bit of buffer for lineHeight
+            height: height * 1.2
+        };
+    };
+    const doRender = () => {
+        const w = width ?? (container.clientWidth || window.innerWidth);
+        const h = height ?? (container.clientHeight || window.innerHeight);
+        const newLayout = computeLayout(currentRootNode, w, h, measureText);
+        updateDOM(currentLayout, newLayout, container);
+        currentLayout = newLayout;
+    };
+    // Initial render
+    const initialW = width ?? (container.clientWidth || window.innerWidth);
+    const initialH = height ?? (container.clientHeight || window.innerHeight);
+    currentLayout = computeLayout(currentRootNode, initialW, initialH, measureText);
     mountDOM(currentLayout, container);
+    // Attach resize listener
+    window.addEventListener('resize', () => {
+        doRender();
+    });
     // Return re-render function
     return (newNode) => {
-        const w = width ?? container.clientWidth;
-        const h = height ?? container.clientHeight;
-        const newLayout = computeLayout(newNode, w, h);
-        updateDOM(newLayout, container);
-        currentLayout = newLayout;
+        currentRootNode = newNode;
+        doRender();
     };
 }
 //# sourceMappingURL=index.js.map

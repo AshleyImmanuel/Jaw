@@ -8,6 +8,8 @@
 import type { LayoutBox, JawNode } from '@jaw/core';
 import { layoutBoxToCSS } from './styles';
 import { bindEvents } from './events';
+import { diffTrees } from './diff';
+import { applyPatches } from './patch';
 
 /** Map component types to HTML tag names */
 const TAG_MAP: Record<string, string> = {
@@ -81,16 +83,28 @@ export function mountDOM(tree: LayoutBox, container: HTMLElement): void {
 }
 
 /**
- * Update the DOM by re-rendering the entire tree.
+ * Update the DOM by diffing the old and new trees.
  *
- * For Beta 1, this is a full re-render (replace entire DOM tree).
- * The diff/patch system in diff.ts provides the optimization path.
- *
+ * @param oldTree - The previous LayoutBox tree
  * @param newTree - The new LayoutBox tree
  * @param container - The DOM container
  */
-export function updateDOM(newTree: LayoutBox, container: HTMLElement): void {
-  // For now, do a full re-render
-  // TODO: Use diff/patch for incremental updates
-  mountDOM(newTree, container);
+export function updateDOM(oldTree: LayoutBox | null, newTree: LayoutBox, container: HTMLElement): void {
+  // If there's no old tree, do a full initial mount
+  if (!oldTree) {
+    mountDOM(newTree, container);
+    return;
+  }
+
+  // Generate patches by diffing the old and new trees
+  const patches = diffTrees(oldTree, newTree);
+  
+  // Apply patches to the root element inside the container
+  const rootElement = container.firstElementChild as HTMLElement;
+  if (rootElement) {
+    applyPatches(patches, rootElement);
+  } else {
+    // Fallback if root element is missing
+    mountDOM(newTree, container);
+  }
 }

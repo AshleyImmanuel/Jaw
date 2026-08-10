@@ -6,6 +6,8 @@
  */
 import { layoutBoxToCSS } from './styles';
 import { bindEvents } from './events';
+import { diffTrees } from './diff';
+import { applyPatches } from './patch';
 /** Map component types to HTML tag names */
 const TAG_MAP = {
     Box: 'div',
@@ -70,17 +72,28 @@ export function mountDOM(tree, container) {
     container.appendChild(rootElement);
 }
 /**
- * Update the DOM by re-rendering the entire tree.
+ * Update the DOM by diffing the old and new trees.
  *
- * For Beta 1, this is a full re-render (replace entire DOM tree).
- * The diff/patch system in diff.ts provides the optimization path.
- *
+ * @param oldTree - The previous LayoutBox tree
  * @param newTree - The new LayoutBox tree
  * @param container - The DOM container
  */
-export function updateDOM(newTree, container) {
-    // For now, do a full re-render
-    // TODO: Use diff/patch for incremental updates
-    mountDOM(newTree, container);
+export function updateDOM(oldTree, newTree, container) {
+    // If there's no old tree, do a full initial mount
+    if (!oldTree) {
+        mountDOM(newTree, container);
+        return;
+    }
+    // Generate patches by diffing the old and new trees
+    const patches = diffTrees(oldTree, newTree);
+    // Apply patches to the root element inside the container
+    const rootElement = container.firstElementChild;
+    if (rootElement) {
+        applyPatches(patches, rootElement);
+    }
+    else {
+        // Fallback if root element is missing
+        mountDOM(newTree, container);
+    }
 }
 //# sourceMappingURL=dom.js.map

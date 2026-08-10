@@ -1,0 +1,15 @@
+{
+  "name": "@jaw/renderer-web",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@jaw/core": "*",
+    "@jaw/styling": "*",
+    "@jaw/layout": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

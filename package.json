@@ -1,0 +1,27 @@
+{
+  "name": "jaw",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jaw — Production-grade cross-platform UI runtime",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:spec": "vitest run --project spec",
+    "lint": "tsc --noEmit",
+    "clean": "rimraf packages/*/dist"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/ws": "^8.18.1",
+    "rimraf": "^6.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

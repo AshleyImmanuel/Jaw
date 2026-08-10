@@ -1,0 +1,23 @@
+{
+  "name": "@jaw/cli",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "bin": {
+    "jaw": "src/index.ts"
+  },
+  "dependencies": {
+    "@jaw/core": "*",
+    "@jaw/compiler": "*",
+    "@jaw/runtime": "*",
+    "@jaw/components": "*",
+    "@jaw/styling": "*",
+    "@jaw/layout": "*",
+    "@jaw/renderer-web": "*",
+    "@jaw/hot-reload": "*",
+    "esbuild": "^0.21.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

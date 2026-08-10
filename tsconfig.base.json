@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "jsx": "react",
+    "jsxFactory": "Jaw.createElement",
+    "jsxFragmentFactory": "Jaw.Fragment",
+    "paths": {
+      "@jaw/core": ["./packages/core/src"],
+      "@jaw/core/*": ["./packages/core/src/*"],
+      "@jaw/runtime": ["./packages/runtime/src"],
+      "@jaw/runtime/*": ["./packages/runtime/src/*"],
+      "@jaw/components": ["./packages/components/src"],
+      "@jaw/components/*": ["./packages/components/src/*"],
+      "@jaw/styling": ["./packages/styling/src"],
+      "@jaw/styling/*": ["./packages/styling/src/*"],
+      "@jaw/layout": ["./packages/layout/src"],
+      "@jaw/layout/*": ["./packages/layout/src/*"],
+      "@jaw/renderer-web": ["./packages/renderer-web/src"],
+      "@jaw/renderer-web/*": ["./packages/renderer-web/src/*"],
+      "@jaw/compiler": ["./packages/compiler/src"],
+      "@jaw/compiler/*": ["./packages/compiler/src/*"],
+      "@jaw/hot-reload": ["./packages/hot-reload/src"],
+      "@jaw/hot-reload/*": ["./packages/hot-reload/src/*"],
+      "@jaw/cli": ["./packages/cli/src"],
+      "@jaw/cli/*": ["./packages/cli/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "examples"]
+}

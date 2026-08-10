@@ -1,0 +1,14 @@
+{
+  "name": "@jaw/compiler",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@jaw/core": "*",
+    "esbuild": "^0.21.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}
